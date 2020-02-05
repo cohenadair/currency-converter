@@ -163,7 +163,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _buildTextField(title: "Items", controller: controller),
         _horizontalSpacer,
         Text("\$$itemTotalString x ${_exchangeRate.toString()} = "),
-        Text("$exchangeTotalString",
+        Text("\$$exchangeTotalString",
           style: Theme.of(context).textTheme.headline,
         ),
       ],
