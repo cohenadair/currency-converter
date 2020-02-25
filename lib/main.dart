@@ -30,6 +30,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static const _parseError = "PARSE_ERR";
 
   final _receiptTotalController = TextEditingController();
+  final _receiptTotalExcludingTax = TextEditingController();
   final _receiptTaxController = TextEditingController();
   final _transactionTotalController = TextEditingController();
   final _splitController1 = TextEditingController();
@@ -68,7 +69,17 @@ class _MyHomePageState extends State<MyHomePage> {
               Row(
                 children: <Widget>[
                   _buildTextField(
-                    title: "Receipt Tax (%)",
+                    title: "Receipt Total (Excluding Tax)",
+                    controller: _receiptTotalExcludingTax,
+                  ),
+                  _horizontalSpacer,
+                  Spacer(),
+                ],
+              ),
+              Row(
+                children: <Widget>[
+                  _buildTextField(
+                    title: "Receipt Tax Amount",
                     controller: _receiptTaxController,
                   ),
                   _horizontalSpacer,
@@ -77,11 +88,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               _verticalSpacer,
               Text("Exchange Rate: \$${_calculateExchangeRate()}",
-                style: Theme.of(context).textTheme.headline,
+                style: Theme.of(context).textTheme.headline5,
+              ),
+              Text("Tax Rate: \$${_calculateTaxRate() ?? _parseError}",
+                style: Theme.of(context).textTheme.headline5,
               ),
               _verticalSpacer,
               Text("Splits",
-                style: Theme.of(context).textTheme.display1,
+                style: Theme.of(context).textTheme.headline4,
               ),
               Text("Separate multiple items with a comma."),
               _verticalSpacer,
@@ -137,20 +151,12 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
 
-    double tax;
-    try {
-      if (_receiptTaxController.text != null) {
-        tax = double.parse(_receiptTaxController.text);
-      }
-    } on Exception {
-      // Do nothing.
-    }
-
     var exchangeTotalString;
-    if (itemTotalString == null && tax != null) {
+    var taxPercent = _calculateTaxRate();
+    if (itemTotalString == null && taxPercent != null) {
       itemTotalString = itemTotal.toStringAsFixed(2);
-      exchangeTotalString = (itemTotal * (tax / 100 + 1) * _exchangeRate)
-          .toStringAsFixed(2);
+      exchangeTotalString = (itemTotal * (taxPercent + 1)
+          * _exchangeRate).toStringAsFixed(2);
     } else {
       itemTotalString = _parseError;
       exchangeTotalString = _parseError;
@@ -164,7 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _horizontalSpacer,
         Text("\$$itemTotalString x ${_exchangeRate.toString()} = "),
         Text("\$$exchangeTotalString",
-          style: Theme.of(context).textTheme.headline,
+          style: Theme.of(context).textTheme.headline5,
         ),
       ],
     );
@@ -195,5 +201,21 @@ class _MyHomePageState extends State<MyHomePage> {
     } on Exception {
       return _parseError;
     }
+  }
+
+  double _calculateTaxRate() {
+    double taxPercent;
+    if (_receiptTaxController.text != null
+        && _receiptTotalExcludingTax.text != null)
+    {
+      var totalExcludingTax = double.tryParse(_receiptTotalExcludingTax.text);
+      var taxAmount = double.tryParse(_receiptTaxController.text);
+      print("Total excluding tax $totalExcludingTax");
+      print("Tax amount          $taxAmount");
+      if (totalExcludingTax != null && taxAmount != null) {
+        taxPercent = taxAmount / totalExcludingTax;
+      }
+    }
+    return taxPercent;
   }
 }
